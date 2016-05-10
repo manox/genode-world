@@ -11,7 +11,7 @@
  * under the terms of the GNU General Public License version 2.
  */
 
-#include <vdma_session/vdma_session.h>
+#include <vdma_session/zynq/vdma_session.h>
 #include <cap_session/connection.h>
 #include <dataspace/client.h>
 #include <base/printf.h>
