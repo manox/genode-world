@@ -61,7 +61,7 @@ install_config {
 			<any-service> <parent/> </any-service>
 		</route>
 		<config>
-			<remoterom localname="test" name="remote" src="192.168.42.10" dst="192.168.42.11">
+			<remoterom localname="test" name="remote" src="192.168.0.100" dst="192.168.0.101">
 				<default>
 					<default />
 				</default>
@@ -76,7 +76,7 @@ install_config {
 		</route>
 		<provides><service name="ROM"/></provides>
 		<config>
-			<remoterom name="remote" src="192.168.42.11" dst="192.168.42.10">
+			<remoterom name="remote" src="192.168.0.101" dst="192.168.0.100">
 				<default>
 					<default />
 				</default>
@@ -91,14 +91,14 @@ install_config {
 			<any-service> <parent/> </any-service>
 		</route>
 		<config>
-			<nic tap="tap1"/>
+			<nic tap="tap0"/>
 		</config>
 	</start>
 	<start name="nic_drv">
 		<resource name="RAM" quantum="4M"/>
 		<provides><service name="Nic"/></provides>
 		<config>
-			<nic tap="tap1"/>
+			<nic tap="tap0"/>
 		</config>
 	</start>
 	<start name="rom_logger">
