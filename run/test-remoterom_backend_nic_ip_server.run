@@ -61,14 +61,14 @@ install_config {
 			<any-service> <parent/> </any-service>
 		</route>
 		<config>
-			<remoterom localname="test" name="remote" src="192.168.42.10" dst="192.168.42.11" />
+			<remoterom localname="test" name="remote" src="192.168.0.10" dst="192.168.0.11" />
 		</config>
 	</start>
 	<start name="nic_drv">
 		<resource name="RAM" quantum="4M"/>
 		<provides><service name="Nic"/></provides>
 		<config>
-			<nic tap="tap1"/>
+			<nic tap="tap0"/>
 		</config>
 	</start>
 </config>}

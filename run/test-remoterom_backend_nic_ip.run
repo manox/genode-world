@@ -61,7 +61,7 @@ install_config {
 			<any-service> <parent/> </any-service>
 		</route>
 		<config>
-			<remoterom localname="test" name="remote" src="192.168.0.100" dst="192.168.0.101">
+			<remoterom localname="test" name="remote" src="192.168.0.10" dst="192.168.0.11">
 				<default>
 					<default />
 				</default>
@@ -76,7 +76,7 @@ install_config {
 		</route>
 		<provides><service name="ROM"/></provides>
 		<config>
-			<remoterom name="remote" src="192.168.0.101" dst="192.168.0.100">
+			<remoterom name="remote" src="192.168.0.11" dst="192.168.0.10">
 				<default>
 					<default />
 				</default>
