@@ -1,14 +1,20 @@
 /*
- * \brief  TODO
+ * \brief  Client-side proxy component translating a rom_session provided over a network into a local rom_session.
  * \author Johannes Schlatow
  * \date   2016-02-15
- */
-
-/** 
+ * 
+ * Usage scenario:
  * __________    ________________                 _________________    __________
- * | server | -> |  remote_rom   | -> (network) -> |   remote_rom   | -> | client |
+ * | server | -> |  remote_rom  | -> (network) -> |   remote_rom  | -> | client |
  * |        |    |    server    |                 |    client     |    |        |
  * ----------    ----------------                 -----------------    ----------
+ */
+
+/*
+ * Copyright (C) 2016 Genode Labs GmbH
+ *
+ * This file is part of the Genode OS framework, which is distributed
+ * under the terms of the GNU General Public License version 2.
  */
 
 #include <base/printf.h>

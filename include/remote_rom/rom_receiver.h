@@ -4,6 +4,13 @@
  * \date   2016-02-18
  */
 
+/*
+ * Copyright (C) 2016 Genode Labs GmbH
+ *
+ * This file is part of the Genode OS framework, which is distributed
+ * under the terms of the GNU General Public License version 2.
+ */
+
 #ifndef __INCLUDE__REMOTE_ROM__ROM_RECEIVER_H_
 #define __INCLUDE__REMOTE_ROM__ROM_RECEIVER_H_
 
