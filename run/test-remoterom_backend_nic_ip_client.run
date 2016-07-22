@@ -47,7 +47,7 @@ install_config {
 		<resource name="RAM" quantum="8M"/>
 		<provides><service name="ROM"/></provides>
 		<config>
-			<remoterom name="remote" src="192.168.0.11" dst="192.168.0.10" />
+			<remoterom name="remote" src="192.168.0.111" dst="192.168.0.110" />
 		</config>
 	</start>
 	<start name="nic_drv">

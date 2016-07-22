@@ -61,7 +61,7 @@ install_config {
 			<any-service> <parent/> </any-service>
 		</route>
 		<config>
-			<remoterom localname="test" name="remote" src="192.168.0.10" dst="192.168.0.11" />
+			<remoterom localname="test" name="remote" src="192.168.0.110" dst="192.168.0.111" />
 		</config>
 	</start>
 	<start name="nic_drv">
