@@ -57,7 +57,7 @@ class Remote_rom::Packet_base : public Ethernet_frame, public Ipv4_packet
 		char         _module_name[MAX_NAME_LEN];   /* the ROM module name */
 		Type         _type;                        /* packet type */
 		uint32_t       _content_size;                /* ROM content size in bytes */
-		uint16_t       _offset;                      /* offset in bytes */
+		uint32_t       _offset;                      /* offset in bytes */
 		uint16_t       _payload_size;                /* payload size in bytes */
 
 		/*****************************************************
@@ -404,6 +404,7 @@ class Remote_rom::Backend_server : public Backend_server_base, public Backend_ba
 			Nic::Packet_descriptor pd = alloc_tx_packet(sizeof(SignalPacket));
 			SignalPacket *packet = (SignalPacket*)_nic.tx()->packet_content(pd);
 
+			packet->payload_size(0);
 			packet->prepare_ethernet(_mac_address);
 			packet->prepare_ipv4(_src_ip, _dst_ip);
 			packet->prepare(_forwarder->module_name());
