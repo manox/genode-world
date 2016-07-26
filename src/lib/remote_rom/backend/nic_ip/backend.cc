@@ -410,7 +410,6 @@ class Remote_rom::Backend_server : public Backend_server_base, public Backend_ba
 			Nic::Packet_descriptor pd = alloc_tx_packet(sizeof(SignalPacket));
 			SignalPacket *packet = new (_nic.tx()->packet_content(pd)) SignalPacket();
 
-			packet->payload_size(0);
 			packet->prepare_ethernet(_mac_address);
 			packet->prepare_ipv4(_src_ip, _dst_ip);
 			packet->prepare(_forwarder->module_name());
