@@ -9,7 +9,7 @@ INC_DIR += $(OPENCV_PORT_DIR)/include
 
 CC_OPT += -D__OPENCV_BUILD=1
 
-LIBS += libc libc_pipe stdcxx zlib libm libpng jpeg
+LIBS += libc stdcxx zlib libm
 
 SHARED_LIB = yes
 

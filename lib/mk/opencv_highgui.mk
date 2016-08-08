@@ -10,7 +10,7 @@ INC_DIR += $(OPENCV_PORT_DIR)/include
 
 CC_OPT += -D__OPENCV_BUILD=1
 
-LIBS += libc libc_pipe stdcxx zlib libm libpng jpeg opencv_core
+LIBS += libc stdcxx zlib libm opencv_core
 
 SHARED_LIB = yes
 
