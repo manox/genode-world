@@ -6,6 +6,7 @@
 
 #include <base/env.h>
 #include <base/exception.h>
+#include <base/log.h>
 
 #include <backend_base.h>
 
@@ -22,10 +23,13 @@ namespace Remote_rom {
 	using  Genode::size_t;
 	using  Genode::uint16_t;
 	using  Genode::uint32_t;
+	using  Genode::Cstring;
 	using  Genode::Packet_descriptor;
 	using  Genode::env;
 	using  Net::Ethernet_frame;
 	using  Net::Ipv4_packet;
+	using  Net::Mac_address;
+	using  Net::Ipv4_address;
 
 	template <class>
 	class  Backend_base;
@@ -56,9 +60,9 @@ class Remote_rom::Packet_base : public Ethernet_frame, public Ipv4_packet
 	protected:
 		char         _module_name[MAX_NAME_LEN];   /* the ROM module name */
 		Type         _type;                        /* packet type */
-		uint32_t       _content_size;                /* ROM content size in bytes */
-		uint32_t       _offset;                      /* offset in bytes */
-		uint16_t       _payload_size;                /* payload size in bytes */
+		uint32_t     _content_size;                /* ROM content size in bytes */
+		uint32_t     _offset;                      /* offset in bytes */
+		uint16_t     _payload_size;                /* payload size in bytes */
 
 		/*****************************************************
 		 ** 'payload' must be the last member of this class **
@@ -68,7 +72,12 @@ class Remote_rom::Packet_base : public Ethernet_frame, public Ipv4_packet
 
 	public:
 
-		Packet_base(size_t size) : Ethernet_frame(sizeof(Packet_base) + size), Ipv4_packet(sizeof(Packet_base) + size - sizeof(Ethernet_frame)), _payload_size(size) { }
+		Packet_base(size_t size) 
+		:
+			Ethernet_frame(sizeof(Packet_base) + size),
+			Ipv4_packet(sizeof(Packet_base) + size - sizeof(Ethernet_frame)),
+			_payload_size(size)
+		{ }
 
 		void const * base() const { return &payload; }
 
@@ -217,7 +226,7 @@ class Remote_rom::Backend_base
 		class Rx_thread : public Genode::Thread
 		{
 			protected:
-				Ipv4_packet::Ipv4_address &_accept_ip;
+				Ipv4_address    &_accept_ip;
 				Nic::Connection &_nic;
 				HANDLER         &_handler;
 
@@ -241,16 +250,16 @@ class Remote_rom::Backend_base
 						_nic.rx()->acknowledge_packet(_rx_packet);
 					}
 				}
-																																																											
+
 				void _handle_rx_ready_to_ack(unsigned) { _handle_rx_packet_avail(0); }
-																																																											
+
 				void _handle_link_state(unsigned)
 				{
-					PINF("link state changed");
+					Genode::log("link state changed");
 				}
 
 			public:
-				Rx_thread(Nic::Connection &nic, HANDLER &handler, Ipv4_packet::Ipv4_address &ip)
+				Rx_thread(Nic::Connection &nic, HANDLER &handler, Ipv4_address &ip)
 				: Genode::Thread(Weight::DEFAULT_WEIGHT, "backend_nic_rx", 8192),
 				  _accept_ip(ip),
 				  _nic(nic), _handler(handler),
@@ -277,13 +286,13 @@ class Remote_rom::Backend_base
 				}
 		};
 
-		Nic::Packet_allocator   _tx_block_alloc;
-		Nic::Connection         _nic;
-		Rx_thread               _rx_thread;
-		Ethernet_frame::Mac_address _mac_address;
-		Ipv4_packet::Ipv4_address   _src_ip;
-		Ipv4_packet::Ipv4_address   _accept_ip;
-		Ipv4_packet::Ipv4_address   _dst_ip;
+		Nic::Packet_allocator _tx_block_alloc;
+		Nic::Connection       _nic;
+		Rx_thread             _rx_thread;
+		Mac_address           _mac_address;
+		Ipv4_address          _src_ip;
+		Ipv4_address          _accept_ip;
+		Ipv4_address          _dst_ip;
 
 	protected:
 		void _tx_ack(bool block = false)
@@ -297,19 +306,16 @@ class Remote_rom::Backend_base
 		}
 
 	public:
-		explicit Backend_base(Genode::Allocator &alloc, HANDLER &handler) : _tx_block_alloc(&alloc), _nic(&_tx_block_alloc, BUF_SIZE, BUF_SIZE), _rx_thread(_nic, handler, _accept_ip)
+		explicit Backend_base(Genode::Allocator &alloc, HANDLER &handler)
+		:
+			_tx_block_alloc(&alloc), _nic(&_tx_block_alloc, BUF_SIZE, BUF_SIZE),
+			_rx_thread(_nic, handler, _accept_ip)
 		{
 			/* start dispatcher thread */
 			_rx_thread.start();
 
-			/* convert and store mac address */
-			Nic::Mac_address mac = _nic.mac_address();
-			_mac_address.addr[0] = mac.addr[0];
-			_mac_address.addr[1] = mac.addr[1];
-			_mac_address.addr[2] = mac.addr[2];
-			_mac_address.addr[3] = mac.addr[3];
-			_mac_address.addr[4] = mac.addr[4];
-			_mac_address.addr[5] = mac.addr[5];
+			/* store mac address */
+			_mac_address = _nic.mac_address();
 
 			try {
 				char ip_string[15];
@@ -322,7 +328,7 @@ class Remote_rom::Backend_base
 
 				_accept_ip = _src_ip;
 			} catch (...) {
-				PWRN("No IP configured, falling back to broadcast mode!");
+				Genode::warning("No IP configured, falling back to broadcast mode!");
 				_src_ip = Ipv4_packet::CURRENT;
 				_dst_ip = Ipv4_packet::BROADCAST;
 				_accept_ip = Ipv4_packet::BROADCAST;
@@ -423,7 +429,8 @@ class Remote_rom::Backend_server : public Backend_server_base, public Backend_ba
 			switch (packet.type())
 			{
 				case Packet_base::UPDATE:
-					if (verbose) PINF("receiving UPDATE (%s) packet", packet.module_name());
+					if (verbose)
+						Genode::log("receiving UPDATE (", Cstring(packet.module_name()), ") packet");
 
 					if (!_forwarder)
 						return;
@@ -514,14 +521,16 @@ class Remote_rom::Backend_client : public Backend_client_base, public Backend_ba
 			switch (packet.type())
 			{
 				case Packet_base::SIGNAL:
-					if (verbose) PINF("receiving SIGNAL(%s) packet", packet.module_name());
+					if (verbose)
+						Genode::log("receiving SIGNAL(", Cstring(packet.module_name()), ") packet");
 
 					/* send update request */
 					update(packet.module_name());
 					
 					break;
 				case Packet_base::DATA:
-					if (verbose) PINF("receiving DATA(%s) packet", packet.module_name());
+					if (verbose)
+						Genode::log("receiving DATA(", Cstring(packet.module_name()), ") packet");
 
 					/* write into buffer */
 					if (!_receiver) return;
@@ -537,7 +546,8 @@ class Remote_rom::Backend_client : public Backend_client_base, public Backend_ba
 					
 					break;
 				case Packet_base::DATA_CONT:
-					if (verbose) PINF("receiving DATA_CONT(%s) packet", packet.module_name());
+					if (verbose)
+						Genode::log("receiving DATA_CONT(", Cstring(packet.module_name()), ") packet");
 
 					if (!_receiver) return;
 

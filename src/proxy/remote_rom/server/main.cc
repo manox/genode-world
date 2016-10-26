@@ -17,7 +17,7 @@
  * under the terms of the GNU General Public License version 2.
  */
 
-#include <base/printf.h>
+#include <base/log.h>
 #include <base/env.h>
 
 #include <backend_base.h>
@@ -127,13 +127,17 @@ namespace Component {
 	{
 		try {
 			Genode::Xml_node remote_rom = Genode::config()->xml_node().sub_node("remote_rom");
-			remote_rom.attribute("localname").value(Remote_rom::modulename, sizeof(Remote_rom::modulename));
+			if (remote_rom.has_attribute("localname"))
+				remote_rom.attribute("localname").value(Remote_rom::modulename, sizeof(Remote_rom::modulename));
+			else
+				remote_rom.attribute("name").value(Remote_rom::modulename, sizeof(Remote_rom::modulename));
+
 			remote_rom.attribute("name").value(Remote_rom::remotename, sizeof(Remote_rom::remotename));
 			try {
 				remote_rom.attribute("binary").value(&Remote_rom::binary);
 			} catch (...) { }
 		} catch (...) {
-			PERR("No ROM module configured!");
+			Genode::error("No ROM module configured!");
 		}
 
 		static Remote_rom::Main main(env.ep());
