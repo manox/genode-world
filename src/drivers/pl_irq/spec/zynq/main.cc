@@ -14,7 +14,8 @@
 #include <pl_irq_session/zynq/pl_irq_session.h>
 #include <cap_session/connection.h>
 #include <dataspace/client.h>
-#include <base/printf.h>
+#include <base/log.h>
+#include <base/heap.h>
 #include <base/sleep.h>
 #include <root/component.h>
 #include <os/static_root.h>
@@ -59,8 +60,7 @@ class Pl_irq::Root : public Genode::Root_component<Pl_irq::Session_component>
             Genode::size_t ram_quota = Genode::Arg_string::find_arg(args, "ram_quota").ulong_value(0);
 
             if (ram_quota < sizeof(Session_component)) {
-                PWRN("Insufficient dontated ram_quota (%zd bytes), require %zd bytes",
-                     ram_quota, sizeof(Session_component));
+                Genode::warning("Insufficient dontated ram_quota (", ram_quota," bytes), require ", sizeof(Session_component), " bytes");
                 throw Genode::Root::Quota_exceeded();
             }
 
@@ -79,7 +79,7 @@ int main(int, char **)
 {
     using namespace Pl_irq;
 
-    PINF("Zynq PL IRQ Hander");
+    Genode::log("Zynq PL IRQ Hander");
 
     /*
      * Read config
@@ -93,13 +93,13 @@ int main(int, char **)
         {
             irqs.push_back(0);
             pl_irq_node.attribute("number").value(&irqs[i]);
-            PINF("PL IRQ with number %u added.", irqs[i]);
+            Genode::log("PL IRQ with number ", irqs[i], " added.");
 
             if (pl_irq_node.is_last("irq")) break;
         }
     }
     catch (Genode::Xml_node::Nonexistent_sub_node) {
-        PWRN("No PL IRQ config");
+        Genode::warning("No PL IRQ config");
     }
 
     /*
