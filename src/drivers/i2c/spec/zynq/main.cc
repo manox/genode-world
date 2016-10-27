@@ -11,7 +11,7 @@
  * under the terms of the GNU General Public License version 2.
  */
 
-#include <i2c_session/i2c_session.h>
+#include <i2c_session/zynq/i2c_session.h>
 #include <cap_session/connection.h>
 #include <dataspace/client.h>
 #include <base/log.h>

@@ -11,7 +11,7 @@
  * under the terms of the GNU General Public License version 2.
  */
 
-#include <vdma_session/vdma_session.h>
+#include <vdma_session/zynq/vdma_session.h>
 #include <cap_session/connection.h>
 #include <dataspace/client.h>
 #include <base/log.h>
@@ -83,8 +83,7 @@ class Vdma::Root : public Genode::Root_component<Vdma::Session_component>
 			Genode::size_t ram_quota = Genode::Arg_string::find_arg(args, "ram_quota").ulong_value(0);
 
 			if (ram_quota < sizeof(Session_component)) {
-				PWRN("Insufficient dontated ram_quota (%zd bytes), require %zd bytes",
-				 ram_quota, sizeof(Session_component));
+				Genode::warning("Insufficient dontated ram_quota (", ram_quota," bytes), require ", sizeof(Session_component), " bytes");
 				throw Genode::Root::Quota_exceeded();
 			}
 
