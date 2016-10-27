@@ -1,0 +1,39 @@
+LICENSE   := BSD
+VERSION   := 3.1.0
+DOWNLOADS := opencv.archive
+
+URL(opencv) := https://github.com/Itseez/opencv/archive/$(VERSION).zip
+SHA(opencv) := 8c932b68fe2e1575e88dde759ab1ed1d53d6f41b
+DIR(opencv) := src/lib
+
+DIRS := include/opencv2 \
+	include/opencv2/core \
+	include/opencv2/imgcodecs \
+	include/opencv2/imgproc \
+	include/opencv2/highgui \
+        include/opencv2/videoio \
+        include/opencv2/calib3d \
+        include/opencv2/features2d \
+        include/opencv2/flann \
+		include/opencv2/ml
+
+DIR_CONTENT(include/opencv2) := src/lib/opencv-3.1.0/include/opencv2/opencv.hpp \
+				src/lib/opencv-3.1.0/modules/core/include/opencv2/*.hpp \
+				src/lib/opencv-3.1.0/modules/imgcodecs/include/opencv2/*.hpp \
+				src/lib/opencv-3.1.0/modules/imgproc/include/opencv2/*.hpp \
+				src/lib/opencv-3.1.0/modules/highgui/include/opencv2/*.hpp \
+                                src/lib/opencv-3.1.0/modules/videoio/include/opencv2/*.hpp \
+                                src/lib/opencv-3.1.0/modules/calib3d/include/opencv2/*.hpp \
+                                src/lib/opencv-3.1.0/modules/features2d/include/opencv2/*.hpp \
+                                src/lib/opencv-3.1.0/modules/flann/include/opencv2/*.hpp \
+								src/lib/opencv-3.1.0/modules/ml/include/opencv2/*.hpp
+
+DIR_CONTENT(include/opencv2/core) := src/lib/opencv-3.1.0/modules/core/include/opencv2/core/*
+DIR_CONTENT(include/opencv2/imgcodecs) := src/lib/opencv-3.1.0/modules/imgcodecs/include/opencv2/imgcodecs/*
+DIR_CONTENT(include/opencv2/imgproc) := src/lib/opencv-3.1.0/modules/imgproc/include/opencv2/imgproc/*
+DIR_CONTENT(include/opencv2/highgui) := src/lib/opencv-3.1.0/modules/highgui/include/opencv2/highgui/*
+DIR_CONTENT(include/opencv2/videoio) := src/lib/opencv-3.1.0/modules/videoio/include/opencv2/videoio/*
+DIR_CONTENT(include/opencv2/calib3d) := src/lib/opencv-3.1.0/modules/calib3d/include/opencv2/calib3d/*
+DIR_CONTENT(include/opencv2/features2d) := src/lib/opencv-3.1.0/modules/features2d/include/opencv2/features2d/*
+DIR_CONTENT(include/opencv2/flann) := src/lib/opencv-3.1.0/modules/flann/include/opencv2/flann/*
+DIR_CONTENT(include/opencv2/ml) := src/lib/opencv-3.1.0/modules/ml/include/opencv2/ml/*
