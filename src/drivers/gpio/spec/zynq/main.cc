@@ -13,7 +13,6 @@
 
 #include <gpio_session/zynq/gpio_session.h>
 #include <base/attached_rom_dataspace.h>
-#include <base/component.h>
 #include <dataspace/client.h>
 #include <base/log.h>
 #include <base/heap.h>
