@@ -12,16 +12,11 @@
  */
 
 #include <i2c_session/zynq/i2c_session.h>
-#include <cap_session/connection.h>
 #include <dataspace/client.h>
 #include <base/log.h>
 #include <base/heap.h>
-#include <base/sleep.h>
 #include <root/component.h>
-
-#include <os/static_root.h>
-#include <os/config.h>
-
+#include <base/component.h>
 #include "driver.h"
 
 namespace I2C {
@@ -75,29 +70,31 @@ class I2C::Root : public Genode::Root_component<I2C::Session_component>
 		  _driver(driver) { }
 };
 
-int main(int, char **)
+
+struct Main
 {
-	using namespace I2C;
+	Genode::Env         &env;
+	Genode::Sliced_heap  sliced_heap;
 
-	Genode::log("Zynq I2C driver");
+	Main(Genode::Env &env)
+	:
+		env(env),
+		sliced_heap(env.ram(), env.rm())
+	{
+		Genode::log("Zynq I2C driver");
 
-	Driver &driver = Driver::factory();
+        /*
+         * Create Driver
+         */
+        I2C::Driver &driver = I2C::Driver::factory(env);
 
-	/*
-	 * Initialize server entry point
-	 */
-	enum { STACK_SIZE = 4096 };
-	static Cap_connection cap;
-	Sliced_heap sliced_heap(env()->ram_session(), env()->rm_session());
-	static Rpc_entrypoint ep(&cap, STACK_SIZE, "i2c_ep");
-	static I2C::Root i2c_root(&ep, &sliced_heap, driver);
+		/*
+		 * Announce service
+		 */
+        static I2C::Root root(&env.ep().rpc_ep(), &sliced_heap, driver);
+		env.parent().announce(env.ep().manage(root));
+	}
+};
 
-	/*
-	 * Announce service
-	 */
-	env()->parent()->announce(ep.manage(&i2c_root));
 
-	Genode::sleep_forever();
-	return 0;
-}
-
+void Component::construct(Genode::Env & env) { static Main main(env); }

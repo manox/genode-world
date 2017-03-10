@@ -14,7 +14,7 @@
 #ifndef _I2C_H_
 #define _I2C_H_
 
-#include <os/attached_io_mem_dataspace.h>
+#include <base/attached_io_mem_dataspace.h>
 #include <util/mmio.h>
 
 /* Transfer direction */
@@ -49,8 +49,10 @@ namespace I2C {
 
 struct I2C::Zynq_I2C : Attached_io_mem_dataspace, Mmio
 {
-	Zynq_I2C(Genode::addr_t const mmio_base, Genode::size_t const mmio_size) :
-		Genode::Attached_io_mem_dataspace(mmio_base, mmio_size),
+	Zynq_I2C(Genode::Env &env,
+             Genode::addr_t const mmio_base,
+             Genode::size_t const mmio_size) :
+		Genode::Attached_io_mem_dataspace(env, mmio_base, mmio_size),
 	  	Genode::Mmio((Genode::addr_t)local_addr<void>())
 	{
 
@@ -164,8 +166,6 @@ struct I2C::Zynq_I2C : Attached_io_mem_dataspace, Mmio
 		struct COMP 		: Bitfield<0,1> {};
 	};
 
-
-	Timer::Connection _timer;
 	int sendByteCount;
 	uint8_t *sendBufferPtr;
 

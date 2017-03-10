@@ -3,10 +3,10 @@
 # \date   2015-03-12
 
 TARGET   = zynq_i2c_drv
-REQUIRES = zynq_i2c
+REQUIRES += zynq
 
 SRC_CC   = main.cc
-LIBS     = base config
+LIBS     = base
 INC_DIR += $(PRG_DIR)
 
 vpath main.cc $(PRG_DIR)

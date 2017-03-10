@@ -17,7 +17,6 @@
 #include <io_mem_session/connection.h>
 #include <timer_session/connection.h>
 #include <util/mmio.h>
-
 #include <drivers/board_base.h>
 
 #include "i2c.h"
@@ -37,31 +36,51 @@ class I2C::Driver
 
 		public:
 
-			I2C_bank(Genode::addr_t base, Genode::size_t size) : _i2c(base, size) {	}
+			I2C_bank(Genode::Env &env, Genode::addr_t base, Genode::size_t size) : _i2c(env, base, size) {	}
 
 			Zynq_I2C* regs() { return &_i2c; }
 		};
 
-		static I2C_bank _i2c_bank[2];
+//		static I2C_bank _i2c_bank[2];
+        I2C_bank _i2c_bank_0;
+        I2C_bank _i2c_bank_1;
 
-		Driver() {}
-		~Driver() {}
+        I2C_bank* _i2c_bank(unsigned bus)
+        {
+            switch (bus) {
+            case 0:
+                return &_i2c_bank_0;
+            case 1:
+                return &_i2c_bank_1;
+            }
+
+            Genode::error("no I2C_bank for pin ", bus, " available");
+            return 0;
+        }
+
+		Driver(Genode::Env &env) :
+            _i2c_bank_0(env, Genode::Board_base::I2C0_MMIO_BASE, Genode::Board_base::I2C_MMIO_SIZE),
+            _i2c_bank_1(env, Genode::Board_base::I2C1_MMIO_BASE, Genode::Board_base::I2C_MMIO_SIZE)
+        { }
+
+		~Driver()
+        { }
 
 	public:
-		static Driver& factory();
+		static Driver& factory(Genode::Env &env);
 
 		bool read_byte_16bit_reg(unsigned bus, Genode::uint8_t adr, Genode::uint16_t reg, Genode::uint8_t *data)
 		{
-			Zynq_I2C *i2c_reg = _i2c_bank[bus].regs();
+			Zynq_I2C *i2c_reg = _i2c_bank(bus)->regs();
 			Genode::uint8_t buf[2];
 			buf[0]=reg >> 8;
 			buf[1]=reg;
-			if (i2c_reg->i2c_write(adr, buf, 2) != 0) 
+			if (i2c_reg->i2c_write(adr, buf, 2) != 0)
 			{
 				Genode::error("Zynq i2c: read failed");
 				return false;
 			}
-			if (i2c_reg->i2c_read_byte(adr, data) != 0) 
+			if (i2c_reg->i2c_read_byte(adr, data) != 0)
 			{
 				Genode::error("Zynq i2c: read failed");
 				return false;
@@ -72,12 +91,12 @@ class I2C::Driver
 		bool write_16bit_reg(unsigned bus, Genode::uint8_t adr, Genode::uint16_t reg,
 			Genode::uint8_t data)
 		{
-			Zynq_I2C *i2c_reg = _i2c_bank[bus].regs();
+			Zynq_I2C *i2c_reg = _i2c_bank(bus)->regs();
 			Genode::uint8_t buf[3];
 			buf[0]=reg >> 8;
 			buf[1]=reg;
 			buf[2]=data;
-			if (i2c_reg->i2c_write(adr, buf, 3) != 0) 
+			if (i2c_reg->i2c_write(adr, buf, 3) != 0)
 			{
 				Genode::error("Zynq i2c: write failed");
 				return false;
@@ -86,14 +105,14 @@ class I2C::Driver
 		}
 };
 
-I2C::Driver::I2C_bank I2C::Driver::_i2c_bank[2] = {
-	{Genode::Board_base::I2C0_MMIO_BASE, Genode::Board_base::I2C_MMIO_SIZE},
-	{Genode::Board_base::I2C1_MMIO_BASE, Genode::Board_base::I2C_MMIO_SIZE},
-};
+//I2C::Driver::I2C_bank I2C::Driver::_i2c_bank[2] = {
+//	{Genode::Board_base::I2C0_MMIO_BASE, Genode::Board_base::I2C_MMIO_SIZE},
+//	{Genode::Board_base::I2C1_MMIO_BASE, Genode::Board_base::I2C_MMIO_SIZE},
+//};
 
-I2C::Driver& I2C::Driver::factory()
+I2C::Driver& I2C::Driver::factory(Genode::Env &env)
 {
-	static I2C::Driver driver;
+	static I2C::Driver driver(env);
 	return driver;
 }
 
