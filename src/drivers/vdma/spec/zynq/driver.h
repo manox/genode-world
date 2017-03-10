@@ -33,11 +33,11 @@ class Vdma::Driver
 
         std::vector<Zynq_Vdma*> _vdma_bank;
 
-        Driver(std::vector<Genode::addr_t> addr)
+        Driver(Genode::Env &env, std::vector<Genode::addr_t> addr)
         {
             for (unsigned i = 0; i < addr.size(); i++)
             {
-                _vdma_bank.push_back(new Zynq_Vdma(addr[i], Board_base::VDMA_MMIO_SIZE));
+                _vdma_bank.push_back(new Zynq_Vdma(env, addr[i], Board_base::VDMA_MMIO_SIZE));
             }
         }
 
@@ -52,7 +52,7 @@ class Vdma::Driver
 
 	public:
 
-        static Driver& factory(std::vector<Genode::addr_t> addr);
+        static Driver& factory(Genode::Env &env, std::vector<Genode::addr_t> addr);
 
         bool setConfig(unsigned vdma, Genode::uint32_t data, bool isMM2S)
         {
@@ -96,9 +96,9 @@ class Vdma::Driver
         }
 };
 
-Vdma::Driver& Vdma::Driver::factory(std::vector<Genode::addr_t> addr)
+Vdma::Driver& Vdma::Driver::factory(Genode::Env &env, std::vector<Genode::addr_t> addr)
 {
-    static Vdma::Driver driver(addr);
+    static Vdma::Driver driver(env, addr);
     return driver;
 }
 

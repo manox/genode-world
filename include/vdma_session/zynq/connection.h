@@ -21,8 +21,8 @@ namespace Vdma {
 
 	struct Connection : Genode::Connection<Session>, Session_client
 	{
-        Connection(unsigned vdma_number) __attribute__((deprecated))
-        : Genode::Connection<Session>(session("ram_quota=8K, vdma=%zd", vdma_number)),
+        Connection(Genode::Env &env, unsigned vdma_number)
+        : Genode::Connection<Session>(session(env.parent(), "ram_quota=8K, vdma=%zd", vdma_number)),
 		  Session_client(cap()) { }
 	};
 }
