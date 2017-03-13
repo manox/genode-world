@@ -31,11 +31,11 @@ class Pl_irq::Handler
 
         std::vector<Zynq_Pl_irq*> _pl_irq_bank;
 
-        Handler(std::vector<unsigned> irqs)
+        Handler(Genode::Env &env, std::vector<unsigned> irqs)
         {
             for (unsigned i = 0; i < irqs.size(); i++)
             {
-                _pl_irq_bank.push_back(new Zynq_Pl_irq(irqs[i]));
+                _pl_irq_bank.push_back(new Zynq_Pl_irq(env, irqs[i]));
             }
         }
 
@@ -50,7 +50,7 @@ class Pl_irq::Handler
 
 	public:
 
-        static Handler& factory(std::vector<unsigned> irqs);
+        static Handler& factory(Genode::Env &env, std::vector<unsigned> irqs);
 
         bool wait(unsigned irq_nr)
         {
@@ -60,9 +60,9 @@ class Pl_irq::Handler
         }
 };
 
-Pl_irq::Handler& Pl_irq::Handler::factory(std::vector<unsigned> irqs)
+Pl_irq::Handler& Pl_irq::Handler::factory(Genode::Env &env, std::vector<unsigned> irqs)
 {
-    static Pl_irq::Handler handler(irqs);
+    static Pl_irq::Handler handler(env, irqs);
     return handler;
 }
 

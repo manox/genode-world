@@ -21,8 +21,8 @@ namespace Pl_irq {
 
 	struct Connection : Genode::Connection<Session>, Session_client
 	{
-        Connection(unsigned pl_irq_number)
-        : Genode::Connection<Session>(session("ram_quota=8K, pl_irq=%zd", pl_irq_number)),
+        Connection(Genode::Env &env, unsigned pl_irq_number)
+        : Genode::Connection<Session>(session(env.parent(), "ram_quota=8K, pl_irq=%zd", pl_irq_number)),
 		  Session_client(cap()) { }
 	};
 }

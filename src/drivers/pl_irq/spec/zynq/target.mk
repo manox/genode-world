@@ -5,7 +5,7 @@
 TARGET   = zynq_pl_irq_handler
 
 SRC_CC   = main.cc
-LIBS     = base config libc libm stdcxx
+LIBS     = base stdcxx
 INC_DIR += $(PRG_DIR)
 
 vpath main.cc $(PRG_DIR)
