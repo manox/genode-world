@@ -15,7 +15,6 @@
 #define _PL_IRQ_H_
 
 #include <irq_session/connection.h>
-#include <os/server.h>
 
 namespace Pl_irq {
 	using namespace Genode;
@@ -31,7 +30,7 @@ class Pl_irq::Zynq_Pl_irq : public Genode::Irq_connection
 
     public:
 
-        Zynq_Pl_irq(Genode::uint16_t number) : Irq_connection(number)
+        Zynq_Pl_irq(Genode::Env &env, Genode::uint16_t number) : Irq_connection(env, number)
         {
             Irq_connection::sigh(_irq_rec.manage(&_irq_ctx));
             Irq_connection::ack_irq();

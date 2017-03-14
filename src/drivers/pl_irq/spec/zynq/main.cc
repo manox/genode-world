@@ -12,15 +12,13 @@
  */
 
 #include <pl_irq_session/zynq/pl_irq_session.h>
-#include <cap_session/connection.h>
+#include <base/attached_rom_dataspace.h>
 #include <dataspace/client.h>
 #include <base/log.h>
 #include <base/heap.h>
-#include <base/sleep.h>
 #include <root/component.h>
-#include <os/static_root.h>
-#include <os/config.h>
 #include <vector>
+#include <libc/component.h>
 #include "handler.h"
 
 namespace Pl_irq {
@@ -75,53 +73,54 @@ class Pl_irq::Root : public Genode::Root_component<Pl_irq::Session_component>
           _handler(handler) { }
 };
 
-int main(int, char **)
+
+struct Main
 {
-    using namespace Pl_irq;
+	Genode::Env         &env;
+	Genode::Sliced_heap  sliced_heap;
 
-    Genode::log("Zynq PL IRQ Hander");
+	Genode::Attached_rom_dataspace config_rom { env, "config" };
 
-    /*
-     * Read config
-     */
-    std::vector<unsigned> irqs;
+	Main(Genode::Env &env)
+	:
+		env(env),
+		sliced_heap(env.ram(), env.rm())
+	{
+		Genode::log("Zynq PL IRQ Hander");
 
-    try {
-        Genode::Xml_node pl_irq_node = Genode::config()->xml_node().sub_node("irq");
+        /*
+         * Read config
+         */
+        std::vector<unsigned> irqs;
 
-        for (unsigned i = 0; ;i++, pl_irq_node = pl_irq_node.next("irq"))
-        {
-            irqs.push_back(0);
-            pl_irq_node.attribute("number").value(&irqs[i]);
-            Genode::log("PL IRQ with number ", irqs[i], " added.");
+        try {
+            Genode::Xml_node pl_irq_node = config_rom.xml().sub_node("irq");
 
-            if (pl_irq_node.is_last("irq")) break;
+            for (unsigned i = 0; ;i++, pl_irq_node = pl_irq_node.next("irq"))
+            {
+                irqs.push_back(0);
+                pl_irq_node.attribute("number").value(&irqs[i]);
+                Genode::log("PL IRQ with number ", irqs[i], " added.");
+
+                if (pl_irq_node.is_last("irq")) break;
+            }
         }
-    }
-    catch (Genode::Xml_node::Nonexistent_sub_node) {
-        Genode::warning("No PL IRQ config");
-    }
+        catch (Genode::Xml_node::Nonexistent_sub_node) {
+            Genode::warning("No PL IRQ config");
+        }
 
-    /*
-     * Create Handler
-     */
-    Handler &handler = Handler::factory(irqs);
-    irqs.clear();
+        /*
+         * Create handler
+         */
+        Pl_irq::Handler &handler = Pl_irq::Handler::factory(env, irqs);
+        irqs.clear();
 
-	/*
-	 * Initialize server entry point
-	 */
-    enum { STACK_SIZE = 4096 };
-	static Cap_connection cap;
-	Sliced_heap sliced_heap(env()->ram_session(), env()->rm_session());
-    static Rpc_entrypoint ep(&cap, STACK_SIZE, "pl_irq_ep");
-    static Pl_irq::Root pl_irq_root(&ep, &sliced_heap, handler);
+		/*
+		 * Announce service
+		 */
+        static Pl_irq::Root root(&env.ep().rpc_ep(), &sliced_heap, handler);
+		env.parent().announce(env.ep().manage(root));
+	}
+};
 
-	/*
-	 * Announce service
-     */
-    env()->parent()->announce(ep.manage(&pl_irq_root));
-
-	Genode::sleep_forever();
-	return 0;
-}
+void Libc::Component::construct(Libc::Env &env) { static Main main(env); }

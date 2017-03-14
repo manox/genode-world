@@ -14,7 +14,7 @@
 #ifndef _VDMA_H_
 #define _VDMA_H_
 
-#include <os/attached_io_mem_dataspace.h>
+#include <base/attached_io_mem_dataspace.h>
 #include <util/mmio.h>
 
 namespace Vdma {
@@ -24,8 +24,10 @@ namespace Vdma {
 
 struct Vdma::Zynq_Vdma : Attached_io_mem_dataspace, Mmio
 {
-    Zynq_Vdma(Genode::addr_t const mmio_base, Genode::size_t const mmio_size) :
-		Genode::Attached_io_mem_dataspace(mmio_base, mmio_size),
+    Zynq_Vdma(Genode::Env &env,
+              Genode::addr_t const mmio_base,
+              Genode::size_t const mmio_size) :
+		Genode::Attached_io_mem_dataspace(env, mmio_base, mmio_size),
 	  	Genode::Mmio((Genode::addr_t)local_addr<void>())
     { }
 

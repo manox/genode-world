@@ -12,15 +12,14 @@
  */
 
 #include <vdma_session/zynq/vdma_session.h>
-#include <cap_session/connection.h>
+#include <base/attached_rom_dataspace.h>
 #include <dataspace/client.h>
 #include <base/log.h>
 #include <base/heap.h>
 #include <base/sleep.h>
 #include <root/component.h>
-#include <os/static_root.h>
-#include <os/config.h>
 #include <vector>
+#include <libc/component.h>
 #include "driver.h"
 
 namespace Vdma {
@@ -83,7 +82,8 @@ class Vdma::Root : public Genode::Root_component<Vdma::Session_component>
 			Genode::size_t ram_quota = Genode::Arg_string::find_arg(args, "ram_quota").ulong_value(0);
 
 			if (ram_quota < sizeof(Session_component)) {
-				Genode::warning("Insufficient dontated ram_quota (", ram_quota," bytes), require ", sizeof(Session_component), " bytes");
+                Genode::warning("Insufficient dontated ram_quota (", ram_quota, " bytes), "
+                                "require ", sizeof(Session_component), " bytes");
 				throw Genode::Root::Quota_exceeded();
 			}
 
@@ -99,53 +99,54 @@ class Vdma::Root : public Genode::Root_component<Vdma::Session_component>
 };
 
 
-int main(int, char **)
+struct Main
 {
-	using namespace Vdma;
+	Genode::Env         &env;
+	Genode::Sliced_heap  sliced_heap;
 
-	Genode::log("Zynq VDMA driver");
+	Genode::Attached_rom_dataspace config_rom { env, "config" };
 
-	/*
-	 * Read config
-	 */
-	std::vector<Genode::addr_t> addr;
+	Main(Genode::Env &env)
+	:
+		env(env),
+		sliced_heap(env.ram(), env.rm())
+	{
+		Genode::log("Zynq VDMA driver");
 
-	try {
-		Genode::Xml_node vdma_node = Genode::config()->xml_node().sub_node("vdma");
+        /*
+         * Read config
+         */
+        std::vector<Genode::addr_t> addr;
 
-		for (unsigned i = 0; ;i++, vdma_node = vdma_node.next("vdma"))
-		{
-			addr.push_back(0);
-			vdma_node.attribute("addr").value(&addr[i]);
-			Genode::log("VDMA with mio address ", Genode::Hex(addr[i]), " added.");
+        try {
+            Genode::Xml_node vdma_node = config_rom.xml().sub_node("vdma");
 
-			if (vdma_node.is_last("vdma")) break;
-		}
+            for (unsigned i = 0; ;i++, vdma_node = vdma_node.next("vdma"))
+            {
+                addr.push_back(0);
+                vdma_node.attribute("addr").value(&addr[i]);
+                Genode::log("VDMA with mio address ", Genode::Hex(addr[i]), " added.");
+
+                if (vdma_node.is_last("vdma")) break;
+            }
+        }
+        catch (Genode::Xml_node::Nonexistent_sub_node) {
+            Genode::warning("No VDMA config");
+        }
+
+        /*
+         * Create Driver
+         */
+        Vdma::Driver &driver = Vdma::Driver::factory(env, addr);
+        addr.clear();
+
+		/*
+		 * Announce service
+		 */
+        static Vdma::Root root(&env.ep().rpc_ep(), &sliced_heap, driver);
+		env.parent().announce(env.ep().manage(root));
 	}
-	catch (Genode::Xml_node::Nonexistent_sub_node) {
-		Genode::warning("No VDMA config");
-	}
+};
 
-	/*
-	 * Create Driver
-	 */
-	Driver &driver = Driver::factory(addr);
-	addr.clear();
 
-	/*
-	 * Initialize server entry point
-	 */
-    enum { STACK_SIZE = 4096 };
-	static Cap_connection cap;
-	Sliced_heap sliced_heap(env()->ram_session(), env()->rm_session());
-	static Rpc_entrypoint ep(&cap, STACK_SIZE, "vdma_ep");
-	static Vdma::Root vdma_root(&ep, &sliced_heap, driver);
-
-	/*
-	 * Announce service
-	 */
-	env()->parent()->announce(ep.manage(&vdma_root));
-
-	Genode::sleep_forever();
-	return 0;
-}
+void Libc::Component::construct(Libc::Env &env) { static Main main(env); }

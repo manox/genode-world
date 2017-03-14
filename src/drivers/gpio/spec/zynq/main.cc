@@ -12,15 +12,13 @@
  */
 
 #include <gpio_session/zynq/gpio_session.h>
-#include <cap_session/connection.h>
+#include <base/attached_rom_dataspace.h>
 #include <dataspace/client.h>
 #include <base/log.h>
-#include <base/sleep.h>
 #include <base/heap.h>
 #include <root/component.h>
-#include <os/static_root.h>
-#include <os/config.h>
 #include <vector>
+#include <libc/component.h>
 #include "driver.h"
 
 namespace Gpio {
@@ -87,53 +85,54 @@ class Gpio::Root : public Genode::Root_component<Gpio::Session_component>
 };
 
 
-int main(int, char **)
+struct Main
 {
-	using namespace Gpio;
+	Genode::Env         &env;
+	Genode::Sliced_heap  sliced_heap;
 
-	Genode::log("Zynq Gpio driver");
+	Genode::Attached_rom_dataspace config_rom { env, "config" };
 
-	/*
-	 * Read config
-	 */
-	std::vector<Genode::addr_t> addr;
+	Main(Genode::Env &env)
+	:
+		env(env),
+		sliced_heap(env.ram(), env.rm())
+	{
+		Genode::log("Zynq Gpio driver");
 
-	try {
-		Genode::Xml_node gpio_node = Genode::config()->xml_node().sub_node("gpio");
+        /*
+         * Read config
+         */
+        std::vector<Genode::addr_t> addr;
 
-		for (unsigned i = 0; ;i++, gpio_node = gpio_node.next("gpio"))
-		{
-			addr.push_back(0);
-			gpio_node.attribute("addr").value(&addr[i]);
-			Genode::log("Gpio with mio address ", Genode::Hex(addr[i]), " added.");
+        try {
+            Genode::Xml_node gpio_node = config_rom.xml().sub_node("gpio");
 
-			if (gpio_node.is_last("gpio")) break;
-		}
+            for (unsigned i = 0; ;i++, gpio_node = gpio_node.next("gpio"))
+            {
+                addr.push_back(0);
+                gpio_node.attribute("addr").value(&addr[i]);
+                Genode::log("Gpio with mio address ", Genode::Hex(addr[i]), " added.");
+
+                if (gpio_node.is_last("gpio")) break;
+            }
+        }
+        catch (Genode::Xml_node::Nonexistent_sub_node) {
+        Genode::warning("No Gpio config");
+        }
+
+        /*
+         * Create Driver
+         */
+        Gpio::Driver &driver = Gpio::Driver::factory(env, addr);
+        addr.clear();
+
+		/*
+		 * Announce service
+		 */
+        static Gpio::Root root(&env.ep().rpc_ep(), &sliced_heap, driver);
+		env.parent().announce(env.ep().manage(root));
 	}
-	catch (Genode::Xml_node::Nonexistent_sub_node) {
-	Genode::warning("No Gpio config");
-	}
+};
 
-	/*
-	 * Create Driver
-	 */
-	Driver &driver = Driver::factory(addr);
-	addr.clear();
 
-	/*
-	 * Initialize server entry point
-	 */
-	enum { STACK_SIZE = 4096 };
-	static Cap_connection cap;
-	Sliced_heap sliced_heap(env()->ram_session(), env()->rm_session());
-	static Rpc_entrypoint ep(&cap, STACK_SIZE, "gpio_ep");
-	static Gpio::Root gpio_root(&ep, &sliced_heap, driver);
-
-	/*
-	 * Announce service
-	 */
-	env()->parent()->announce(ep.manage(&gpio_root));
-
-	Genode::sleep_forever();
-	return 0;
-}
+void Libc::Component::construct(Libc::Env &env) { static Main main(env); }

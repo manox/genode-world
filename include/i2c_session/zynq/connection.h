@@ -25,8 +25,9 @@ namespace I2C {
 	                   public Session_client
 	{
 	public:
-		Connection(unsigned int bus_num) :
-			Genode::Connection<Session>(session("ram_quota=4K, bus=%zd", bus_num)),
+		Connection(Genode::Env &env, unsigned int bus_num)
+		:
+			Genode::Connection<Session>(session(env.parent(), "ram_quota=4K, bus=%zd", bus_num)),
 			Session_client(cap()) { }
 	};
 }

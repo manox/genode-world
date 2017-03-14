@@ -33,11 +33,11 @@ class Gpio::Driver
 
         std::vector<Zynq_Gpio*> _gpio_bank;
 
-        Driver(std::vector<Genode::addr_t> addr)
+        Driver(Genode::Env &env, std::vector<Genode::addr_t> addr)
         {
             for (unsigned i = 0; i < addr.size(); i++)
             {
-                _gpio_bank.push_back(new Zynq_Gpio(addr[i], Genode::Board_base::GPIO_MMIO_SIZE));
+                _gpio_bank.push_back(new Zynq_Gpio(env, addr[i], Genode::Board_base::GPIO_MMIO_SIZE));
             }
         }
 
@@ -52,7 +52,7 @@ class Gpio::Driver
 
 	public:
 
-        static Driver& factory(std::vector<Genode::addr_t> addr);
+        static Driver& factory(Genode::Env &env, std::vector<Genode::addr_t> addr);
 
         Genode::uint8_t read(unsigned gpio, bool isChannel2)
         {
@@ -67,9 +67,9 @@ class Gpio::Driver
         }
 };
 
-Gpio::Driver& Gpio::Driver::factory(std::vector<Genode::addr_t> addr)
+Gpio::Driver& Gpio::Driver::factory(Genode::Env &env, std::vector<Genode::addr_t> addr)
 {
-    static Gpio::Driver driver(addr);
+    static Gpio::Driver driver(env, addr);
     return driver;
 }
 
